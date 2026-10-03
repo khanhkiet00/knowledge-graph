@@ -1,22 +1,16 @@
-# Kiến trúc Dự án Knowledge Graph (Knowledge Graph Architecture) 🧠
+# System & Agent Architecture
 
-> **Tài liệu tham chiếu dành cho AI Agent & Lập trình viên**  
-> *Vị trí: `.agents/ARCHITECTURE.md`*  
-> *Tài liệu này tổng hợp toàn bộ kiến trúc, luồng dữ liệu, schema cơ sở dữ liệu và cấu trúc dự án để giúp AI Agent nắm bắt dự án ngay lập tức ở các phiên làm việc tiếp theo.*
+This document synthesizes the system architecture, Neo4j graph database schema, registered agents, and orchestration workflows in the `knowledge-graph` repository.
 
----
+## 1. Project Overview
 
-## 1. 🎯 Tổng quan Dự án
+The **Knowledge Graph** system automatically collects GitHub Trending repositories, stores and links data as a Knowledge Graph on Neo4j DB, and provides an interactive Web Dashboard for monitoring workflows.
 
-Hệ thống **Knowledge Graph** tự động thu thập thông tin các dự án nổi bật (GitHub Trending), lưu trữ và liên kết dữ liệu dưới dạng **Đồ thị Tri thức (Knowledge Graph)** trên CSDL **Neo4j**, đồng thời cung cấp giao diện **Web Dashboard** trực quan để theo dõi và điều phối các luồng công việc (Workflows).
-
----
-
-## 2. 🏗 Kiến trúc Hệ thống (System Architecture)
+## 2. System Architecture
 
 ```mermaid
 flowchart TD
-    subgraph External["Nguồn dữ liệu bên ngoài"]
+    subgraph External["External Data Sources"]
         GH["GitHub Trending Pages\n(daily / weekly / monthly)"]
     end
 
@@ -26,7 +20,7 @@ flowchart TD
         Tests["test_github_trending.py\n(Unit Tests)"]
     end
 
-    subgraph Database["Cơ sở dữ liệu Graph (Neo4j Container)"]
+    subgraph Database["Graph Database (Neo4j Container)"]
         Neo4j[("Neo4j Database\nbolt://localhost:7687\nhttp://localhost:7474")]
     end
 
@@ -38,81 +32,107 @@ flowchart TD
     GH -->|HTTP Scraping| Scraper
     Scraper -->|Dict List| Sync
     Sync -->|Cypher Queries| Neo4j
-    Frontend -.->|Quản lý & Theo dõi Luồng| Neo4j
+    Frontend -.->|Workflow Management| Neo4j
 ```
 
----
+## 3. Neo4j Graph Database Schema
 
-## 3. 📊 Schema Cơ sở dữ liệu Neo4j (Graph Schema)
+Entities are stored as Nodes and linked via Relationships:
 
-Hệ thống lưu trữ các đối tượng dưới dạng **Node** và liên kết bằng các **Relationship**:
-
-### 🔷 Nút (Nodes)
+### Nodes
 1. **`Repository`**:
-   - `url` (String, Primary Key): Đường dẫn GitHub của repo.
-   - `name` (String): Tên repo (vd: `facebook/react`).
-   - `description` (String): Mô tả repo.
-   - `stars_total` (Integer): Tổng số sao tích lũy.
+   - `url` (String, Primary Key): GitHub URL.
+   - `name` (String): Repo name (e.g. `facebook/react`).
+   - `description` (String): Summary description.
+   - `stars_total` (Integer): Total stars count.
 2. **`Language`**:
-   - `name` (String, Primary Key): Tên ngôn ngữ lập trình (vd: `TypeScript`, `Python`).
+   - `name` (String, Primary Key): Programming language name (e.g. `TypeScript`, `Python`).
 3. **`TrendingPeriod`**:
-   - `type` (String): Loại chu kỳ (`daily`, `weekly`, `monthly`).
-   - `date` (String): Ngày thu thập dữ liệu (`YYYY-MM-DD`).
+   - `type` (String): Cycle type (`daily`, `weekly`, `monthly`).
+   - `date` (String): Collection date (`YYYY-MM-DD`).
 
-### 🔗 Mối quan hệ (Relationships)
-- **`(:Repository)-[:WRITTEN_IN]->(:Language)`**: Repo được viết bằng ngôn ngữ tương ứng.
-- **`(:Repository)-[:TRENDING_IN {stars_added: N}]->(:TrendingPeriod)`**: Repo lọt vào danh sách trending trong chu kỳ chỉ định với số sao tăng thêm `stars_added`.
+### Relationships
+- **`(:Repository)-[:WRITTEN_IN]->(:Language)`**: Repo written in language.
+- **`(:Repository)-[:TRENDING_IN {stars_added: N}]->(:TrendingPeriod)`**: Repo listed in trending period with `stars_added`.
 
----
+## 4. Agent Architecture & Orchestration
 
-## 4. 📂 Cấu trúc Thư mục & Vai trò Thành phần
+The system partitions responsibilities across registered agents and modular skills:
+
+```mermaid
+flowchart LR
+    subgraph Agents["Registered Agents (.agents/registry/)"]
+        DPA["Data Pipeline Agent\n(get-data/)"]
+        DUI["Dashboard UI Agent\n(dashboard/)"]
+    end
+
+    subgraph Skills["Reusable Skills (.agents/skills/)"]
+        RAS["repo_analyzer"]
+        FDS["frontend_design"]
+    end
+
+    subgraph Storage["Storage & UI"]
+        Neo4j[("Neo4j Database")]
+        ReactUI["React Web Dashboard"]
+    end
+
+    DPA -->|Utilizes| RAS
+    DPA -->|Scrapes & Syncs| Neo4j
+    DUI -->|Utilizes| FDS
+    DUI -->|Renders & Queries| ReactUI
+    ReactUI -.->|Inspects Graph| Neo4j
+```
+
+### Agent & Skill Interaction
+- **Data Pipeline Agent**: Handles scraping, transformation, and Neo4j database sync. Uses [`repo_analyzer`](skills/repo_analyzer/SKILL.md) to extract deep structured knowledge from repository READMEs.
+- **Dashboard UI Agent**: Manages the React + Vite frontend application. Adheres to the design system defined in [`frontend_design`](skills/frontend_design/SKILL.md).
+
+## 5. Directory Structure & Documentation Index
 
 ```text
 knowledge-graph/
-├── docker-compose.yml       # Cấu hình container Neo4j (ports 7474, 7687)
-├── data/                    # Volume dữ liệu lưu trữ Neo4j
-├── README.md                # Tóm tắt nhanh & Hướng dẫn cài đặt ban đầu
+├── AGENTS.md                # [Source of Truth] Main entry point & instructions for AI agents
+├── docker-compose.yml       # Neo4j container configuration (ports 7474, 7687)
+├── data/                    # Volume storage for Neo4j
+├── README.md                # Project overview & quickstart guide
 │
-├── .agents/                 # Thư mục quản lý bộ nhớ & quy tắc dành cho AI Agent
-│   ├── AGENTS.md            # Quy tắc cốt lõi (Kiểm thử, bảo mật, quy ước code)
-│   ├── ARCHITECTURE.md      # [File này] Chi tiết kiến trúc & schema dự án cho AI
-│   └── skills/              # Kỹ năng mở rộng (Frontend design, UI guidelines, ...)
+├── .agents/                 # Memory & rules directory for AI agents
+│   ├── ARCHITECTURE.md      # [Architecture] System & agent architecture (This file)
+│   ├── rules/               # [Modular Rules] Testing, security, tech debt, code style
+│   │   ├── testing.md
+│   │   ├── security.md
+│   │   ├── tech-debt.md
+│   │   └── code-style.md
+│   ├── registry/            # [Agent Catalog] Agent specifications
+│   │   └── README.md
+│   └── skills/              # [Skills] Reusable agent skills
+│       ├── frontend_design/ # UI/UX design system guidelines
+│       └── repo_analyzer/   # Repo analysis for Knowledge Graph ingestion
 │
-├── get-data/                # Backend Data Pipeline (Python)
-│   ├── github_trending.py   # Hàm cào dữ liệu từ HTML GitHub Trending
-│   ├── neo4j_sync.py        # Class TrendingGraph đồng bộ dữ liệu vào Neo4j qua Cypher
-│   ├── test_github_trending.py # Test suite kiểm tra hàm cào dữ liệu
-│   ├── requirements.txt     # Thư viện phụ thuộc (neo4j, beautifulsoup4, requests, python-dotenv)
-│   └── .env                 # Biến môi trường kết nối Neo4j
+├── get-data/                # Backend Data Pipeline (Python) - Data Pipeline Agent scope
+│   ├── github_trending.py   # GitHub trending scraper
+│   ├── neo4j_sync.py        # Neo4j Cypher sync class
+│   ├── test_github_trending.py # Unit tests
+│   ├── requirements.txt     # Python dependencies
+│   └── .env                 # Neo4j connection variables
 │
-└── dashboard/               # Frontend Web Application (React + Vite)
+└── dashboard/               # Frontend Web Application (React + Vite) - Dashboard UI Agent scope
     ├── src/
-    │   ├── App.jsx          # Giao diện chính: Workflow canvas & Node inspector
-    │   └── index.css        # Styling cho UI Dashboard
+    │   ├── App.jsx          # Workflow canvas & inspector components
+    │   └── index.css        # Dashboard CSS styling
     ├── package.json         # Dependencies
-    └── vite.config.js       # Cấu hình Vite
+    └── vite.config.js       # Vite configuration
 ```
 
-*(Ghi chú: Thư mục `fe-example` là mã mẫu tham khảo độc lập, không nằm trong luồng vận hành chính).*
+## 6. Data Pipeline Workflow
 
----
+1. **Start Neo4j Database:** `docker-compose up -d`
+2. **Run Pipeline (Data Pipeline Agent):** `python get-data/neo4j_sync.py [daily|weekly|monthly]`
+3. **Run Dashboard (Dashboard UI Agent):** `cd dashboard && npm run dev`
 
-## 5. 🔄 Quy trình Xử lý Dữ liệu (Data Pipeline Workflow)
+## Reference Lookup Hierarchy
 
-1. **Khởi chạy CSDL Neo4j:**
-   - Sử dụng Docker Compose: `docker-compose up -d`.
-   - Mật khẩu mặc định trong `docker-compose.yml`: `neo4j/khanh123456`.
-2. **Cào dữ liệu & Đồng bộ:**
-   - Chạy lệnh: `python get-data/neo4j_sync.py [daily|weekly|monthly]`
-   - `github_trending.py` gửi request HTTP tới GitHub, parse HTML lấy danh sách repos.
-   - `neo4j_sync.py` chạy các câu truy vấn Cypher để MERGE node và relationship.
-3. **Giao diện Dashboard:**
-   - Chạy dev server: `cd dashboard && npm run dev`.
-
----
-
-## 📌 Hướng dẫn cho AI ở các phiên tiếp theo
-Khi bắt đầu một phiên làm việc mới về dự án này:
-1. Đọc nhanh file **`.agents/ARCHITECTURE.md`** và **`.agents/AGENTS.md`** để cập nhật toàn bộ ngữ cảnh hệ thống.
-2. Kiểm tra `get-data/` khi cần làm việc với backend pipeline/Neo4j.
-3. Kiểm tra `dashboard/` khi cần chỉnh sửa hoặc phát triển giao diện React.
+1. Start at [`AGENTS.md`](../AGENTS.md) for workflow entry point and non-negotiable rules summary.
+2. Consult [`rules/`](rules/) for detailed testing, security, naming, and technical debt regulations.
+3. Check [`registry/README.md`](registry/README.md) for agent roles and capabilities.
+4. Refer to [`ARCHITECTURE.md`](ARCHITECTURE.md) (this file) for Neo4j graph schema and system flow.

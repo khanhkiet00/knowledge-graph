@@ -1,39 +1,30 @@
-# Knowledge Graph Project - Core Agent Guidelines
+# AI Agent Instructions
 
-> [!NOTE]
-> File này đồng bộ với [`.agents/AGENTS.md`](file:///d:/DuLieu/Project/knowledge-graph/.agents/AGENTS.md). 
-> Mọi quy tắc cốt lõi dưới đây áp dụng cho toàn bộ dự án `knowledge-graph`.
+## Project Overview
 
-## 1. Quy định về Kiểm thử (Testing) - QUAN TRỌNG NHẤT
-- **BẮT BUỘC VIẾT TEST**: Mỗi khi thực hiện xong 1 công việc, 1 hàm hay 1 tính năng mới (đặc biệt là Backend/Data), AI BẮT BUỘC phải viết mã kiểm thử (Test) ngay lập tức để xác nhận tính năng đó hoạt động đúng.
-- Đối với Python: Sử dụng framework `unittest` có sẵn. File test phải bắt đầu bằng chữ `test_` (ví dụ: `test_github_trending.py`). 
+`knowledge-graph` automatically scrapes GitHub Trending repositories, transforms metadata into a Knowledge Graph stored in Neo4j, and visualizes pipeline workflows on a Web Dashboard.
 
-## 2. Công nghệ & Kiến trúc (Tech Stack)
-- **Data Pipeline (Backend)**: Nằm trong thư mục `get-data/`. Viết bằng Python.
-  - Quản lý thư viện qua `requirements.txt`.
-  - Kết nối Database sử dụng thư viện `neo4j` chính thức (Bolt protocol).
-- **Database**: Neo4j Graph Database. Chạy qua Docker (`docker-compose.yml`).
-- **Frontend**: Nằm trong thư mục `dashboard/`. Xây dựng bằng React + Vite.
-  - *Lưu ý: Các quy tắc thiết kế giao diện chi tiết đã được đóng gói thành một Skill riêng (`frontend_design`).*
+- **Data Pipeline:** `get-data/` (Python, BeautifulSoup4, Neo4j Bolt driver)
+- **Database:** Neo4j Graph DB (`docker-compose.yml`, ports 7474, 7687)
+- **Dashboard:** `dashboard/` (React + Vite + TypeScript)
+- **Agent System:** `.agents/` (Architecture, rules, registry, skills)
 
-## 3. Quy tắc Bảo mật & Cấu hình
-- Quản lý biến môi trường (Database URI, mật khẩu, API keys) thông qua file `.env`.
-- **Tuyệt đối KHÔNG hard-code** mật khẩu thật vào code.
-- Luôn cập nhật file `.env.example` khi có biến môi trường mới, và TUYỆT ĐỐI KHÔNG commit file `.env` thật lên Git.
+## Non-Negotiable Core Rules
 
-## 4. Quy ước Đặt tên và Ngôn ngữ
-- **Tên biến / Hàm / Class**: Viết bằng tiếng Anh chuẩn (vd: `fetch_trending`, `neo4j_sync`).
-- **Log / Print / Thông báo lỗi / Giao diện**: In ra bằng tiếng Việt để dễ dàng theo dõi hệ thống.
+1. **Testing:** Logic changes require Python `unittest` (`test_*.py`). Tests must be executed and reported. Details: [`.agents/rules/testing.md`](.agents/rules/testing.md).
+2. **Security:** Use `.env` for secrets. Never hardcode credentials or commit `.env`. Details: [`.agents/rules/security.md`](.agents/rules/security.md).
+3. **Language:** English for variable/function/class names; Vietnamese for console logs, user errors, and UI text. Details: [`.agents/rules/code-style.md`](.agents/rules/code-style.md).
+4. **Architecture & Tech Debt:** Read [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md) before changing graph schema. Inspect [`docs/technical-debt/`](docs/technical-debt/) before architecture changes. Details: [`.agents/rules/tech-debt.md`](.agents/rules/tech-debt.md).
 
-## 5. Quy tắc Quản lý Technical Debt (Technical Debt Rules)
+## Workflow
 
-Trước khi thực hiện một tính năng mới hoặc thay đổi kiến trúc, Agent bắt buộc phải kiểm tra thư mục:
-`docs/technical-debt/`
+- **Small Tasks (typo, simple UI edit):** `Implement → Test → Report`
+- **Standard / Complex Tasks:** `Plan → Implement → Test → Report`
 
-Các quy tắc bắt buộc áp dụng:
-1. **Kiểm tra trạng thái**: Đọc tài liệu Technical Debt liên quan và kiểm tra `Status` cùng các `Activation Conditions`.
-2. **Bảo toàn trạng thái Trì hoãn**: Không tự ý thực hiện hay kích hoạt các item Technical Debt đang ở trạng thái `deferred`.
-3. **Không tự kích hoạt dịch vụ trả phí**: Không tự ý giới thiệu dịch vụ trả phí, thay đổi AI Provider, hoặc phát sinh bất kỳ chi phí nào.
-4. **Hỏi ý kiến người dùng**: Phải xin xác nhận của người dùng trước khi tiến hành bất kỳ thay đổi nào có khả năng phát sinh chi phí.
-5. **Quy trình triển khai**: Khi một item Technical Debt được người dùng kích hoạt triển khai, Agent phải tuân thủ đúng phần `Required Work` được định nghĩa chi tiết trong tài liệu của item đó.
-6. **Tiêu chí hoàn thành**: Không đánh dấu trạng thái của Technical Debt là `resolved` cho đến khi tất cả các tiêu chí `Success Criteria` được kiểm chứng hoàn tất.
+## Key References
+
+- **Rules Directory:** [`.agents/rules/`](.agents/rules/)
+- **System Architecture:** [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)
+- **Agent Registry:** [`.agents/registry/README.md`](.agents/registry/README.md)
+- **Skills Directory:** [`.agents/skills/`](.agents/skills/)
+- **Technical Debt Registry:** [`docs/technical-debt/`](docs/technical-debt/)
