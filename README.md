@@ -2,6 +2,8 @@
 
 Một hệ thống tự động thu thập, lưu trữ và trực quan hóa dữ liệu (từ GitHub Trending) dưới dạng Đồ thị Tri thức (Knowledge Graph). Dự án giúp khám phá các mối quan hệ giữa các Repository, Ngôn ngữ lập trình và các Xu hướng công nghệ.
 
+> 📖 **Xem tài liệu chi tiết kiến trúc hệ thống:** [.agents/ARCHITECTURE.md](.agents/ARCHITECTURE.md)
+
 ## 🛠 Công nghệ sử dụng
 - **Cơ sở dữ liệu:** Neo4j (Graph Database)
 - **Data Pipeline (Backend):** Python (Requests, BeautifulSoup4)

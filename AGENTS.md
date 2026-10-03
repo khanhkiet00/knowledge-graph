@@ -1,6 +1,8 @@
 # Knowledge Graph Project - Core Agent Guidelines
 
-File này chứa các quy tắc CỐT LÕI (Core Guidelines) bắt buộc áp dụng cho toàn bộ dự án `knowledge-graph`.
+> [!NOTE]
+> File này đồng bộ với [`.agents/AGENTS.md`](file:///d:/DuLieu/Project/knowledge-graph/.agents/AGENTS.md). 
+> Mọi quy tắc cốt lõi dưới đây áp dụng cho toàn bộ dự án `knowledge-graph`.
 
 ## 1. Quy định về Kiểm thử (Testing) - QUAN TRỌNG NHẤT
 - **BẮT BUỘC VIẾT TEST**: Mỗi khi thực hiện xong 1 công việc, 1 hàm hay 1 tính năng mới (đặc biệt là Backend/Data), AI BẮT BUỘC phải viết mã kiểm thử (Test) ngay lập tức để xác nhận tính năng đó hoạt động đúng.
@@ -35,4 +37,3 @@ Các quy tắc bắt buộc áp dụng:
 4. **Hỏi ý kiến người dùng**: Phải xin xác nhận của người dùng trước khi tiến hành bất kỳ thay đổi nào có khả năng phát sinh chi phí.
 5. **Quy trình triển khai**: Khi một item Technical Debt được người dùng kích hoạt triển khai, Agent phải tuân thủ đúng phần `Required Work` được định nghĩa chi tiết trong tài liệu của item đó.
 6. **Tiêu chí hoàn thành**: Không đánh dấu trạng thái của Technical Debt là `resolved` cho đến khi tất cả các tiêu chí `Success Criteria` được kiểm chứng hoàn tất.
-
